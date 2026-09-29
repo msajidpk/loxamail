@@ -27,12 +27,16 @@ The intended lifecycle is:
 The core must support different product/provider implementations and must not be built specifically around Microsoft 365.
 
 - A **Product** is a catalogue definition.
-- A **Service** is a customer's purchased instance of a product.
+- A **Service** is the actual purchased/delivered instance belonging to a Customer Account. Supplier assignment and provisioning operations target this Service, not the catalogue Product.
 - Product types eventually include recurring products, one-time services, recurring managed services, and configurable products.
+
+The intended high-level order and service lifecycle is:
+
+`Order → Order Approval → Service Creation → Provisioning → Active → Renewal / Change → Suspension / Cancellation`
 
 ## 4. Proposed LoxaMail Launch Product Catalogue V1
 
-The following is the proposed V1 launch catalogue. Inclusion identifies a proposed catalogue offering; it does not approve its technical specification, supplier, price, billing cycle, or operational rules. Family purposes, product categories, known information, undecided information, and the per-product commercial definition register are documented in [`docs/products/launch-catalogue-v1.md`](docs/products/launch-catalogue-v1.md).
+The following is the proposed V1 launch catalogue. Inclusion identifies a proposed catalogue offering; it does not approve its technical specification, supplier, price, billing cycle, or operational rules. Family purposes, product categories, known information, undecided information, and the per-product commercial definition register are documented in [`docs/products/launch-catalogue-v1.md`](docs/products/launch-catalogue-v1.md). The product-level supplier/provisioning categories and conceptual fulfillment flows are in [`docs/products/supplier-provisioning-v1.md`](docs/products/supplier-provisioning-v1.md).
 
 ### Domains
 
@@ -126,7 +130,13 @@ Odoo-inspired capabilities: customer management, companies, contacts, CRM, leads
 
 Use a modular monolith. Do not introduce microservices, Kubernetes, distributed architecture, or multiple backend applications unless explicitly approved. Keep business modules separated and add modules only when needed.
 
-Future provider abstractions may include Microsoft 365, domain registrars, hosting providers, payment providers, and other providers. Provider-specific behavior must not be scattered through the core. Microsoft Graph, registrar/hosting APIs, payment gateways, transactional email, S3-compatible storage, and Redis/BullMQ are not part of initialization.
+Supplier and provisioning architecture is product-independent:
+
+`LoxaMail Product → Supplier/Provider Assignment → Provisioning Adapter → External Provider`
+
+The assignment is resolved for a purchased Service. The supplier/provisioning system operates on that Service, which belongs to its unified Customer Account; it does not provision the catalogue Product itself. A supplier can be changed through the assignment/adapter boundary without redesigning Product, Order, Service, Subscription, Billing, or Customer architecture. Internal manual and hybrid fulfillment are also valid provisioning categories. Provider-specific behavior must not be scattered through the core.
+
+V1 provisioning categories are `EXTERNAL_PROVIDER`, `INTERNAL_MANUAL`, `HYBRID`, and `FUTURE_INTEGRATION`. Product assignments and their conceptual flows are documented in [`docs/products/supplier-provisioning-v1.md`](docs/products/supplier-provisioning-v1.md). Supplier names and API/integration choices remain TBD. Microsoft Graph, registrar/hosting APIs, payment gateways, transactional email, S3-compatible storage, and Redis/BullMQ are not part of this documentation task or an implementation approval.
 
 ## 9. Development and environments
 
@@ -140,4 +150,4 @@ Supplier; final TLD list and registrar; business email features/supplier/pricing
 
 ## 11. Initialization boundary
 
-Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. It does not implement customer management, CRM, billing, product or order databases, subscriptions, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
+Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Supplier/provisioning categories and flows are business architecture documentation only. They do not implement customer management, CRM, billing, product or order databases, subscriptions, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
