@@ -14,9 +14,11 @@ The platform may combine relevant concepts from WHMCS and Odoo. It is not a clon
 
 ## 2. Customer architecture (locked)
 
-Use one unified Customer Account architecture. Each account has type `COMPANY` or `INDIVIDUAL`; these are not separate customer systems. An account may own contacts, users, products/services, orders, subscriptions, domains, quotes, invoices, payments, tickets, documents, activities, and customer history.
+Use one unified Customer Account architecture. Each account has type `COMPANY` or `INDIVIDUAL`; these are not separate customer systems. An account may own or be associated with contacts, users through account membership, products/services, orders, subscriptions, domains, quotes, invoices, payments, tickets, documents, activities, and customer history.
 
-**Contact/Person is not the same as User.** A contact is a person associated with a customer. A user has authentication access and permissions. Only people who need platform access receive user accounts. An individual customer may be represented as both a contact and a user.
+**Contact/Person is not the same as User.** A Contact represents a real person associated with a Customer Account and may exist without login access. A User represents an authenticated identity. Where appropriate, a User may be related to a Contact and may access one or more Customer Accounts through membership and roles. Customer and internal LoxaMail identity contexts are separate; staff are not customer contacts merely because they can access the platform. Customer users are limited to data in their authorized account context; internal access follows internal roles. An individual customer may be represented as both a contact and a user without creating a separate customer system.
+
+Customer Account status is distinct from Service, Subscription, Invoice, and Payment statuses. The architecture supports multiple users per Customer Account and **supports future multi-account membership for one User**; the exact UI and permission behavior remain TBD. The complete conceptual profile, ownership hierarchy, role concepts, customer portal and admin capabilities, audit expectations, and open decisions are documented in [`docs/business/customer-identity-v1.md`](docs/business/customer-identity-v1.md). No database relationships or authentication/authorization implementation are defined by that document.
 
 ## 3. Product-independent commercial architecture
 
@@ -154,4 +156,4 @@ Supplier; final TLD list and registrar; business email features/supplier/pricing
 
 ## 11. Initialization boundary
 
-Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Supplier/provisioning categories and flows are business architecture documentation only. They do not implement customer management, CRM, billing, product or order databases, subscriptions, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
+Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Customer identity, supplier/provisioning, commercial, and catalogue documents are business architecture only. They do not implement customer management, CRM, authentication or authorization, billing, product or order databases, subscriptions, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
