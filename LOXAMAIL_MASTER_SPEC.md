@@ -133,6 +133,8 @@ CRM & Sales Pipeline V1 adopts a focused set of internal CRM concepts—Leads, O
 
 Support & Ticketing V1 is a focused Customer Account-owned support module. Ticketing remains distinct from CRM, Orders, Services, billing, and provisioning; its conceptual lifecycle and module boundaries are documented in [`docs/business/support-ticketing-v1.md`](docs/business/support-ticketing-v1.md). SLA, support hours, notification channels, and integration policies remain TBD.
 
+Documents & Notifications V1 defines shared, product-independent Document and Notification business capabilities across customer, CRM, sales, service, billing, support, vendor, and purchasing records. Physical storage remains separate from the Document business object; Email is one possible Notification delivery channel. Ownership, visibility, and access follow Customer Account membership and permissions, while internal records remain internal by default. Providers, retention, policies, and implementation remain TBD; see [`docs/business/documents-notifications-v1.md`](docs/business/documents-notifications-v1.md).
+
 ## 7. Technology stack (locked)
 
 - Frontend: Next.js 16, React, TypeScript, Tailwind CSS, shadcn/ui.
@@ -158,6 +160,8 @@ The assignment is resolved for a purchased Service. The supplier/provisioning sy
 V1 provisioning categories are `EXTERNAL_PROVIDER`, `INTERNAL_MANUAL`, `HYBRID`, and `FUTURE_INTEGRATION`. Product assignments and their conceptual flows are documented in [`docs/products/supplier-provisioning-v1.md`](docs/products/supplier-provisioning-v1.md). Supplier names and API/integration choices remain TBD. Microsoft Graph, registrar/hosting APIs, payment gateways, transactional email, S3-compatible storage, and Redis/BullMQ are not part of this documentation task or an implementation approval.
 
 Vendor & Purchasing V1 keeps Vendors/Suppliers and Supplier Offerings separate from Customer Accounts and the public Product Catalogue. Purchase Requests/Orders and Vendor Invoices/Payments are internal purchasing records, distinct from customer Orders and Billing. Supplier assignment remains replaceable and separate from the Provisioning Strategy; see [`docs/business/vendor-purchasing-v1.md`](docs/business/vendor-purchasing-v1.md). No supplier, cost, contract, payment term, integration, or automatic supplier selection is approved.
+
+Documents & Notifications V1 are cross-platform business capabilities. The Document is separate from physical file storage, and a Notification is separate from its delivery channel. Both follow the unified Customer Account and internal/customer access boundaries; see [`docs/business/documents-notifications-v1.md`](docs/business/documents-notifications-v1.md). No storage/email provider, retention/security/marketing policy, delivery infrastructure, or implementation is approved.
 
 ## 9. Development and environments
 

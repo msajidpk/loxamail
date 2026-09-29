@@ -13,3 +13,5 @@ LoxaMail is a product and brand of ONLYZER, not a separate legal entity. Read th
 [CRM & Sales Pipeline Architecture V1](crm-sales-pipeline-v1.md) documents internal Lead, Opportunity, Activity, pipeline, and sales handoff concepts while preserving separate Customer Account, Quote/Order, Support, Billing, and Product modules.
 
 [Vendor & Purchasing Architecture V1](vendor-purchasing-v1.md) defines internal Vendor/Supplier, Supplier Offering, purchase, supplier-cost, Vendor Invoice, and Vendor Payment concepts separately from customer records and billing.
+
+[Documents & Notifications Architecture V1](documents-notifications-v1.md) defines reusable cross-platform Documents and Notifications, storage and delivery-channel boundaries, and customer/internal access concepts without selecting providers or policies.
