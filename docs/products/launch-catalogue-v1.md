@@ -10,6 +10,8 @@ The commercial core remains product-independent:
 
 The platform must not hardcode Microsoft 365 into this lifecycle. Microsoft 365 is one of the proposed product/provider families. The unified Customer Account model remains unchanged: a Customer Account has type `COMPANY` or `INDIVIDUAL`; these are not separate systems. Contacts/people remain distinct from authenticated Users.
 
+Generic commercial concepts and pending decisions are documented in [Commercial Model V1](../business/commercial-model-v1.md). They do not fill in any product's TBD prices, supplier costs, currency, billing interval, quantity, setup fee, tax, renewal, cancellation, refund, or payment terms.
+
 ## 1. Domains
 
 **Purpose:** Offer domain registration, transfer, and renewal services.

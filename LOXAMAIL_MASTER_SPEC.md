@@ -106,7 +106,11 @@ These are potential product areas only. Do not invent features or implement the 
 
 ## 5. Billing direction
 
-The platform will eventually support one-time, monthly, quarterly where appropriate, and annual billing; recurring billing; renewal; suspension; cancellation; reactivation; credits; refunds; and taxes. Exact billing and tax rules are TBD and must not be invented.
+The platform will eventually support one-time, monthly, quarterly, semi-annual, annual, or approved custom intervals where appropriate; recurring billing; renewal; suspension; cancellation; reactivation; credits; refunds; and taxes. A Product will define which billing options are allowed; no interval is assumed for every Product. Exact product rules and values are TBD and must not be invented.
+
+The commercial model is product-independent. Pricing may distinguish supplier cost, selling price, one-time/setup charges, and recurring charges; quantity, currency, tax, discounts, proration, renewal, cancellation, refund, payment fee, and credit handling are configurable commercial concepts whose rules remain pending. No prices, supplier costs, currency, margin target, tax jurisdiction/rate, payment gateway, fee, or policy is approved here. See [`docs/business/commercial-model-v1.md`](docs/business/commercial-model-v1.md) for the V1 commercial concepts and decision register.
+
+Keep Product (catalogue definition), Order, Service (purchased/delivered instance), Subscription (recurring commercial relationship when applicable), Invoice (issued financial snapshot), and Payment (settlement record) distinct. A price change must not silently alter an existing subscription or previously issued invoice; effective dates and renewal-price handling require explicit rules. Credit balances and financial adjustments must be traceable. These are architecture requirements for future design, not implementation approval.
 
 ## 6. Selected WHMCS and Odoo concepts
 
@@ -146,7 +150,7 @@ Staging and production must use separate databases. The desired flow is feature 
 
 ## 10. Product and operational decisions still TBD
 
-Supplier; final TLD list and registrar; business email features/supplier/pricing; all pricing; billing and tax rules; payment gateway; hosting supplier; UI design; production server; provisioning workflow; and hosting/deployment infrastructure.
+Supplier; final TLD list and registrar; business email features/supplier/pricing; all prices, costs, currencies, and margin targets; product billing/quantity/setup rules; tax jurisdiction and treatment; payment gateway and fees; discount, proration, renewal, cancellation, refund, and credit policies; hosting supplier; UI design; production server; provisioning workflow; and hosting/deployment infrastructure. The commercial decision register is in [`docs/business/commercial-model-v1.md`](docs/business/commercial-model-v1.md).
 
 ## 11. Initialization boundary
 
