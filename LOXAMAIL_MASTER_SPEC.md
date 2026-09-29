@@ -22,9 +22,11 @@ Customer Account status is distinct from Service, Subscription, Invoice, and Pay
 
 ## 3. Product-independent commercial architecture
 
-The intended lifecycle is:
+The intended product-independent lifecycle is:
 
-`Product → Order → Service → Subscription → Billing → Payment → Renewal → Provisioning`
+`Customer Account → Lead / Sales Opportunity (future CRM) → Quote (optional) → Customer Approval (where required) → Order → Order Items → Service Creation → Provisioning → Active Service`
+
+Commercial billing and settlement remain distinct: `Order → Financial Obligation → Invoice / Payment`. An Order is not a Payment. An Order Item records the Product and commercial terms selected for that purchase; the Service is the purchased/delivered instance owned by the Customer Account. One Order can contain multiple items and may be fulfilled partially. An item may create one or more Services, a Service with a Subscription for recurring terms, or a one-time work/service record. See [`docs/business/sales-order-lifecycle-v1.md`](docs/business/sales-order-lifecycle-v1.md) for the conceptual V1 lifecycle.
 
 The core must support different product/provider implementations and must not be built specifically around Microsoft 365.
 
@@ -35,6 +37,8 @@ The core must support different product/provider implementations and must not be
 The intended high-level order and service lifecycle is:
 
 `Order → Order Approval → Service Creation → Provisioning → Active → Renewal / Change → Suspension / Cancellation`
+
+Quote and Order states are separate from Service, Subscription, Invoice, Payment, and Provisioning states. A product-independent commercial profile, fulfillment profile, and provisioning strategy guide handling; core Order processing must not branch on named product families such as Microsoft 365, domains, or hosting. Approval, payment gating, cancellation, and failure handling vary only through future approved product/service rules and remain unimplemented.
 
 ## 4. Proposed LoxaMail Launch Product Catalogue V1
 
