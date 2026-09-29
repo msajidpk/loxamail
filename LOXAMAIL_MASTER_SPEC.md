@@ -129,6 +129,8 @@ WHMCS-inspired capabilities: products/services, orders, subscriptions, recurring
 
 Odoo-inspired capabilities: customer management, companies, contacts, CRM, leads, opportunities, quotations, sales orders, activities, vendors, purchasing, documents, and reporting.
 
+Support & Ticketing V1 is a focused Customer Account-owned support module. Ticketing remains distinct from CRM, Orders, Services, billing, and provisioning; its conceptual lifecycle and module boundaries are documented in [`docs/business/support-ticketing-v1.md`](docs/business/support-ticketing-v1.md). SLA, support hours, notification channels, and integration policies remain TBD.
+
 ## 7. Technology stack (locked)
 
 - Frontend: Next.js 16, React, TypeScript, Tailwind CSS, shadcn/ui.
@@ -165,4 +167,4 @@ Supplier; final TLD list and registrar; business email features/supplier/pricing
 
 ## 11. Initialization boundary
 
-Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Customer identity, sales/order, service/subscription, billing/invoice, supplier/provisioning, commercial, and catalogue documents are business architecture only. They do not implement customer management, CRM, authentication or authorization, billing or payment processing, product, order, service, subscription, or financial databases, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
+Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Customer identity, sales/order, service/subscription, billing/invoice, support/ticketing, supplier/provisioning, commercial, and catalogue documents are business architecture only. They do not implement customer management, CRM, authentication or authorization, billing or payment processing, support/ticketing, product, order, service, subscription, or financial databases, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
