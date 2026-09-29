@@ -32,6 +32,7 @@ The core must support different product/provider implementations and must not be
 
 - A **Product** is a catalogue definition.
 - A **Service** is the actual purchased/delivered instance belonging to a Customer Account. Supplier assignment and provisioning operations target this Service, not the catalogue Product.
+- A **Subscription** is the recurring commercial commitment associated with a recurring Service when applicable; it is distinct from the Service. A Service may exist without a Subscription.
 - Product types eventually include recurring products, one-time services, recurring managed services, and configurable products.
 
 The intended high-level order and service lifecycle is:
@@ -39,6 +40,8 @@ The intended high-level order and service lifecycle is:
 `Order → Order Approval → Service Creation → Provisioning → Active → Renewal / Change → Suspension / Cancellation`
 
 Quote and Order states are separate from Service, Subscription, Invoice, Payment, and Provisioning states. A product-independent commercial profile, fulfillment profile, and provisioning strategy guide handling; core Order processing must not branch on named product families such as Microsoft 365, domains, or hosting. Approval, payment gating, cancellation, and failure handling vary only through future approved product/service rules and remain unimplemented.
+
+Service and Subscription concepts, lifecycle states, renewal, changes, suspension, cancellation, expiry, and their boundaries are documented in [`docs/business/service-subscription-lifecycle-v1.md`](docs/business/service-subscription-lifecycle-v1.md). This is business architecture only; final fields, transitions, billing, and provisioning implementation remain deferred.
 
 ## 4. Proposed LoxaMail Launch Product Catalogue V1
 
@@ -160,4 +163,4 @@ Supplier; final TLD list and registrar; business email features/supplier/pricing
 
 ## 11. Initialization boundary
 
-Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Customer identity, supplier/provisioning, commercial, and catalogue documents are business architecture only. They do not implement customer management, CRM, authentication or authorization, billing, product or order databases, subscriptions, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
+Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Customer identity, sales/order, service/subscription, supplier/provisioning, commercial, and catalogue documents are business architecture only. They do not implement customer management, CRM, authentication or authorization, billing, product, order, service, or subscription databases, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
