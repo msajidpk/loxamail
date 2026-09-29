@@ -30,16 +30,65 @@ The core must support different product/provider implementations and must not be
 - A **Service** is a customer's purchased instance of a product.
 - Product types eventually include recurring products, one-time services, recurring managed services, and configurable products.
 
-## 4. Product direction (candidates, not a finalized catalogue)
+## 4. Proposed LoxaMail Launch Product Catalogue V1
 
-### Launch candidates
+The following is the proposed V1 launch catalogue. Inclusion identifies a proposed catalogue offering; it does not approve its technical specification, supplier, price, billing cycle, or operational rules. Family purposes, product categories, known information, undecided information, and the per-product commercial definition register are documented in [`docs/products/launch-catalogue-v1.md`](docs/products/launch-catalogue-v1.md).
 
-- Domains: registration, transfer, renewal. Potential initial TLDs: `.com`, `.net`, `.org`, `.pk`, `.com.pk`.
-- Business email: LoxaMail Business Email Basic, Professional, Enterprise.
-- Microsoft 365: Business Basic, Business Standard, Business Premium.
-- Hosting: Business Hosting, WordPress Hosting.
-- Professional services: Microsoft 365 deployment, email migration, DNS/email configuration, Microsoft 365 security configuration, website/hosting migration.
-- Managed services: managed Microsoft 365, managed email, managed hosting, managed IT support.
+### Domains
+
+Purpose: offer domain registration, transfer, and renewal services.
+
+- Domain Registration
+- Domain Transfer
+- Domain Renewal
+
+Potential initial TLDs mentioned in the current direction are `.com`, `.net`, `.org`, `.pk`, and `.com.pk`; neither the supplier/registrar nor final TLD list is approved.
+
+### Business Email
+
+Purpose: offer LoxaMail-branded business email packages.
+
+- LoxaMail Business Email Basic
+- LoxaMail Business Email Professional
+- LoxaMail Business Email Enterprise
+
+### Microsoft 365
+
+Purpose: offer the named Microsoft 365 business packages as one provider/product family within the product-independent platform.
+
+- Microsoft 365 Business Basic
+- Microsoft 365 Business Standard
+- Microsoft 365 Business Premium
+
+### Hosting
+
+Purpose: offer the named business hosting packages.
+
+- Business Hosting
+- WordPress Hosting
+
+### Professional Services
+
+Purpose: offer the named professional implementation, migration, and configuration services.
+
+- Microsoft 365 Deployment
+- Email Migration
+- DNS / Email Configuration
+- Microsoft 365 Security Configuration
+- Website / Hosting Migration
+
+### Managed Services
+
+Purpose: offer the named ongoing managed-service families; specific service scope and terms are TBD.
+
+- Managed Microsoft 365
+- Managed Email
+- Managed Hosting
+- Managed IT Support
+
+### Product definition versus purchased Customer Service
+
+A Product is a catalogue definition. A purchased Customer Service is the customer's instance of a product. The V1 catalogue lists proposed Product definitions only; it creates no customer purchases or service instances. Customer Account remains one unified architecture with account type `COMPANY` or `INDIVIDUAL`; no separate company and individual customer systems are to be introduced.
 
 ### Phase 2 candidates
 
@@ -49,7 +98,7 @@ Google Workspace, Zoho Workplace, VPS, cloud servers, managed VPS, backup, Micro
 
 AWS, Azure, Google Cloud, enterprise infrastructure, software development, mobile applications, ERP/CRM, AI automation, SEO, and digital marketing.
 
-These are potential product areas only. Do not invent features or implement the entire catalogue.
+These are potential product areas only. Do not invent features or implement the entire catalogue. Product-specific commercial definitions remain pending as recorded in the V1 catalogue documentation.
 
 ## 5. Billing direction
 

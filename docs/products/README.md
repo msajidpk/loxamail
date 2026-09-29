@@ -1,3 +1,3 @@
 # Products
 
-Product names in `LOXAMAIL_MASTER_SPEC.md` are candidates, not finalized commercial definitions. Pricing, supplier, product features, registrar, payment gateway, and billing rules are TBD. Do not infer or implement them without an approved specification change.
+The [Launch Product Catalogue V1](launch-catalogue-v1.md) documents the proposed launch families and per-product commercial fields, all pending unless explicitly defined. The Master Spec is authoritative. Do not infer product features, suppliers, pricing, billing rules, or workflows.
