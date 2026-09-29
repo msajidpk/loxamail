@@ -5,3 +5,5 @@ LoxaMail is a product and brand of ONLYZER, not a separate legal entity. Read th
 [Sales & Order Lifecycle V1](sales-order-lifecycle-v1.md) documents the conceptual direct and quote-based sales paths, order items, service creation, fulfillment, and unresolved workflow decisions.
 
 [Service & Subscription Lifecycle V1](service-subscription-lifecycle-v1.md) documents purchased Service and recurring Subscription boundaries, lifecycle states, renewals, changes, and unresolved operational rules.
+
+[Billing & Invoice Architecture V1](billing-invoice-v1.md) defines the conceptual billing records, invoice snapshot integrity, payment/credit/refund distinctions, and pending financial decisions.

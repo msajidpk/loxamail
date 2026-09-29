@@ -121,6 +121,8 @@ The commercial model is product-independent. Pricing may distinguish supplier co
 
 Keep Product (catalogue definition), Order, Service (purchased/delivered instance), Subscription (recurring commercial relationship when applicable), Invoice (issued financial snapshot), and Payment (settlement record) distinct. A price change must not silently alter an existing subscription or previously issued invoice; effective dates and renewal-price handling require explicit rules. Credit balances and financial adjustments must be traceable. These are architecture requirements for future design, not implementation approval.
 
+Billing is product-independent and distinguishes charges/invoice lines, invoices, payments, customer credits, credit notes, and refunds. Issued invoice snapshots must not be silently rewritten. The conceptual billing and invoice architecture, including unresolved rules, is documented in [`docs/business/billing-invoice-v1.md`](docs/business/billing-invoice-v1.md); it does not approve financial values, tax/legal policy, a gateway, accounting integration, or implementation.
+
 ## 6. Selected WHMCS and Odoo concepts
 
 WHMCS-inspired capabilities: products/services, orders, subscriptions, recurring billing, invoices, payments, renewals, provisioning, domains, customer portal, and support.
@@ -163,4 +165,4 @@ Supplier; final TLD list and registrar; business email features/supplier/pricing
 
 ## 11. Initialization boundary
 
-Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Customer identity, sales/order, service/subscription, supplier/provisioning, commercial, and catalogue documents are business architecture only. They do not implement customer management, CRM, authentication or authorization, billing, product, order, service, or subscription databases, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
+Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Customer identity, sales/order, service/subscription, billing/invoice, supplier/provisioning, commercial, and catalogue documents are business architecture only. They do not implement customer management, CRM, authentication or authorization, billing or payment processing, product, order, service, subscription, or financial databases, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
