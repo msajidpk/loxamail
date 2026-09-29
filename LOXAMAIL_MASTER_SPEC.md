@@ -14,7 +14,7 @@ The platform may combine relevant concepts from WHMCS and Odoo. It is not a clon
 
 ## 2. Customer architecture (locked)
 
-Use one unified Customer Account architecture. Each account has type `COMPANY` or `INDIVIDUAL`; these are not separate customer systems. An account may own or be associated with contacts, users through account membership, products/services, orders, subscriptions, domains, quotes, invoices, payments, tickets, documents, activities, and customer history.
+Use one unified Customer Account architecture. Each account has type `COMPANY` or `INDIVIDUAL`; these are not separate customer systems. An account may own or be associated with Contacts, Users through account membership, Orders, purchased Services (which reference catalogue Products), Subscriptions, domains, quotes, invoices, payments, tickets, documents, activities, and customer history.
 
 **Contact/Person is not the same as User.** A Contact represents a real person associated with a Customer Account and may exist without login access. A User represents an authenticated identity. Where appropriate, a User may be related to a Contact and may access one or more Customer Accounts through membership and roles. Customer and internal LoxaMail identity contexts are separate; staff are not customer contacts merely because they can access the platform. Customer users are limited to data in their authorized account context; internal access follows internal roles. An individual customer may be represented as both a contact and a user without creating a separate customer system.
 
@@ -22,9 +22,11 @@ Customer Account status is distinct from Service, Subscription, Invoice, and Pay
 
 ## 3. Product-independent commercial architecture
 
-The intended product-independent lifecycle is:
+Sales may start directly from a Customer Account or use the optional CRM and quotation path. A Lead may exist before a Customer Account is identified; where the customer is known, CRM may associate it with an existing or newly created Customer Account. The optional quote path is:
 
-`Customer Account → Lead / Sales Opportunity (future CRM) → Quote (optional) → Customer Approval (where required) → Order → Order Items → Service Creation → Provisioning → Active Service`
+`Lead / Opportunity (where applicable) → Customer Account association (when identified) → Quote (optional) → Customer Approval (where required) → Order → Order Items → Service Creation → Provisioning → Active Service`
+
+Direct purchases may start at `Customer Account → Order`; not every sale requires CRM or a Quote.
 
 Commercial billing and settlement remain distinct: `Order → Financial Obligation → Invoice / Payment`. An Order is not a Payment. An Order Item records the Product and commercial terms selected for that purchase; the Service is the purchased/delivered instance owned by the Customer Account. One Order can contain multiple items and may be fulfilled partially. An item may create one or more Services, a Service with a Subscription for recurring terms, or a one-time work/service record. See [`docs/business/sales-order-lifecycle-v1.md`](docs/business/sales-order-lifecycle-v1.md) for the conceptual V1 lifecycle.
 
