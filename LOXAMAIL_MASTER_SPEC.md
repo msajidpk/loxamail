@@ -157,6 +157,8 @@ The assignment is resolved for a purchased Service. The supplier/provisioning sy
 
 V1 provisioning categories are `EXTERNAL_PROVIDER`, `INTERNAL_MANUAL`, `HYBRID`, and `FUTURE_INTEGRATION`. Product assignments and their conceptual flows are documented in [`docs/products/supplier-provisioning-v1.md`](docs/products/supplier-provisioning-v1.md). Supplier names and API/integration choices remain TBD. Microsoft Graph, registrar/hosting APIs, payment gateways, transactional email, S3-compatible storage, and Redis/BullMQ are not part of this documentation task or an implementation approval.
 
+Vendor & Purchasing V1 keeps Vendors/Suppliers and Supplier Offerings separate from Customer Accounts and the public Product Catalogue. Purchase Requests/Orders and Vendor Invoices/Payments are internal purchasing records, distinct from customer Orders and Billing. Supplier assignment remains replaceable and separate from the Provisioning Strategy; see [`docs/business/vendor-purchasing-v1.md`](docs/business/vendor-purchasing-v1.md). No supplier, cost, contract, payment term, integration, or automatic supplier selection is approved.
+
 ## 9. Development and environments
 
 Development is local on the user's Mac: Next.js at `localhost:3000` and a new local MariaDB database when database work begins. Do not reuse the previous LoxaMail database.
@@ -169,4 +171,4 @@ Supplier; final TLD list and registrar; business email features/supplier/pricing
 
 ## 11. Initialization boundary
 
-Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Customer identity, CRM/sales pipeline, sales/order, service/subscription, billing/invoice, support/ticketing, supplier/provisioning, commercial, and catalogue documents are business architecture only. They do not implement customer management, CRM automation, authentication or authorization, billing or payment processing, support/ticketing, product, order, service, subscription, or financial databases, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.
+Initialization creates the clean Next.js foundation, documentation, baseline tooling, and a minimal landing page. Customer identity, CRM/sales pipeline, sales/order, service/subscription, billing/invoice, support/ticketing, vendor/purchasing, supplier/provisioning, commercial, and catalogue documents are business architecture only. They do not implement customer management, CRM automation, authentication or authorization, billing or payment processing, support/ticketing, vendor/purchasing, product, order, service, subscription, or financial databases, integrations, domains, hosting, payments, provisioning, a customer portal, an admin dashboard, complex UI, or a database schema.

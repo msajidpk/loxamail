@@ -11,3 +11,5 @@ LoxaMail is a product and brand of ONLYZER, not a separate legal entity. Read th
 [Support & Ticketing Architecture V1](support-ticketing-v1.md) defines Customer Account-owned support requests, communications, assignment, related-record context, and unresolved support policies.
 
 [CRM & Sales Pipeline Architecture V1](crm-sales-pipeline-v1.md) documents internal Lead, Opportunity, Activity, pipeline, and sales handoff concepts while preserving separate Customer Account, Quote/Order, Support, Billing, and Product modules.
+
+[Vendor & Purchasing Architecture V1](vendor-purchasing-v1.md) defines internal Vendor/Supplier, Supplier Offering, purchase, supplier-cost, Vendor Invoice, and Vendor Payment concepts separately from customer records and billing.
