@@ -153,6 +153,8 @@ Documents & Notifications V1 defines shared, product-independent Document and No
 
 Use a modular monolith. Do not introduce microservices, Kubernetes, distributed architecture, or multiple backend applications unless explicitly approved. Keep business modules separated and add modules only when needed.
 
+V1 uses one primary MariaDB application database shared by the modular monolith; do not introduce per-module or per-service databases. Conceptual entities, ownership, relationships, and database boundaries are documented in [`docs/architecture/database-architecture-v1.md`](docs/architecture/database-architecture-v1.md). This does not define a Prisma schema, migrations, or physical database implementation.
+
 Supplier and provisioning architecture is product-independent:
 
 `LoxaMail Product → Supplier/Provider Assignment → Provisioning Adapter → External Provider`
