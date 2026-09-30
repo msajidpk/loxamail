@@ -1,0 +1,1228 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum CustomerAccountType {
+  COMPANY
+  INDIVIDUAL
+}
+
+enum RoleScope {
+  CUSTOMER
+  INTERNAL
+}
+
+enum ProvisioningCategory {
+  EXTERNAL_PROVIDER
+  INTERNAL_MANUAL
+  HYBRID
+  FUTURE_INTEGRATION
+}
+
+enum DocumentVisibility {
+  CUSTOMER
+  INTERNAL
+  RESTRICTED
+}
+
+enum TicketMessageVisibility {
+  PUBLIC
+  INTERNAL
+  SYSTEM
+}
+
+enum AuditActorType {
+  USER
+  SYSTEM
+}
+
+model CustomerAccount {
+  id          String              @id @default(uuid()) @db.VarChar(36)
+  type        CustomerAccountType
+  displayName String              @db.VarChar(191)
+  status      String              @db.VarChar(50)
+
+  contacts             Contact[]
+  memberships          CustomerMembership[]
+  leads                Lead[]
+  opportunities        Opportunity[]
+  activities           ActivityContext[]     @relation("ActivityContextCustomerAccount")
+  quotes               Quote[]
+  orders               Order[]
+  services             Service[]
+  invoices             Invoice[]
+  payments             Payment[]
+  credits              Credit[]
+  tickets              Ticket[]
+  documents            Document[]
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationCustomerAccount")
+  notifications        Notification[]
+  notificationContexts NotificationContext[] @relation("NotificationContextCustomerAccount")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+}
+
+model Contact {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  customerAccountId String  @db.VarChar(36)
+  userId            String? @db.VarChar(36)
+  displayName       String  @db.VarChar(191)
+  email             String? @db.VarChar(191)
+
+  customerAccount   CustomerAccount    @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  user              User?              @relation("ContactUser", fields: [userId], references: [id], onDelete: SetNull)
+  leads             Lead[]             @relation("LeadContact")
+  opportunities     Opportunity[]      @relation("OpportunityContact")
+  quotes            Quote[]            @relation("QuoteContact")
+  invoiceContacts   Invoice[]          @relation("InvoiceBillingContact")
+  tickets           Ticket[]           @relation("TicketContact")
+  ticketMessages    TicketMessage[]    @relation("TicketMessageContactAuthor")
+  activities        ActivityContext[]  @relation("ActivityContextContact")
+  documentRelations DocumentRelation[] @relation("DocumentRelationContact")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([customerAccountId])
+  @@index([userId])
+}
+
+model User {
+  id String @id @default(uuid()) @db.VarChar(36)
+
+  contacts                 Contact[]                @relation("ContactUser")
+  memberships              CustomerMembership[]
+  internalRoleAssignments  InternalRoleAssignment[]
+  assignedActivities       Activity[]               @relation("ActivityAssignee")
+  ownedLeads               Lead[]                   @relation("LeadOwner")
+  ownedOpportunities       Opportunity[]            @relation("OpportunityOwner")
+  openedTickets            Ticket[]                 @relation("TicketOpenedBy")
+  assignedTickets          Ticket[]                 @relation("TicketAssignee")
+  ticketMessages           TicketMessage[]          @relation("TicketMessageAuthor")
+  notificationDeliveries   NotificationDelivery[]
+  notificationPreferences  NotificationPreference[] @relation("UserNotificationPreferences")
+  uploadedDocuments        Document[]               @relation("DocumentUploader")
+  uploadedDocumentVersions DocumentVersion[]        @relation("DocumentVersionUploader")
+  documentRelations        DocumentRelation[]       @relation("DocumentRelationUser")
+  notificationContexts     NotificationContext[]    @relation("NotificationContextUser")
+  auditEvents              AuditEvent[]             @relation("AuditActor")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+}
+
+model CustomerMembership {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  userId            String  @db.VarChar(36)
+  customerAccountId String  @db.VarChar(36)
+  roleId            String? @db.VarChar(36)
+  status            String  @db.VarChar(50)
+
+  user                    User                     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  customerAccount         CustomerAccount          @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  role                    Role?                    @relation("MembershipRole", fields: [roleId], references: [id], onDelete: SetNull)
+  notificationDeliveries  NotificationDelivery[]
+  notificationPreferences NotificationPreference[] @relation("MembershipNotificationPreferences")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@unique([userId, customerAccountId])
+  @@unique([id, userId])
+  @@unique([id, userId, customerAccountId])
+  @@index([customerAccountId])
+  @@index([roleId])
+}
+
+model Role {
+  id    String    @id @default(uuid()) @db.VarChar(36)
+  key   String    @db.VarChar(100)
+  scope RoleScope
+  name  String    @db.VarChar(191)
+
+  memberships         CustomerMembership[]     @relation("MembershipRole")
+  internalAssignments InternalRoleAssignment[]
+}
+
+model InternalRoleAssignment {
+  id     String @id @default(uuid()) @db.VarChar(36)
+  userId String @db.VarChar(36)
+  roleId String @db.VarChar(36)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+}
+
+model Lead {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  title             String  @db.VarChar(191)
+  status            String  @db.VarChar(50)
+  customerAccountId String? @db.VarChar(36)
+  contactId         String? @db.VarChar(36)
+  ownerUserId       String? @db.VarChar(36)
+
+  customerAccount      CustomerAccount?      @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  contact              Contact?              @relation("LeadContact", fields: [contactId], references: [id], onDelete: SetNull)
+  owner                User?                 @relation("LeadOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  opportunities        Opportunity[]
+  activityContexts     ActivityContext[]     @relation("ActivityContextLead")
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationLead")
+  notificationContexts NotificationContext[] @relation("NotificationContextLead")
+  quotes               Quote[]               @relation("QuoteLead")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([customerAccountId])
+  @@index([contactId])
+  @@index([ownerUserId])
+}
+
+model Opportunity {
+  id                String   @id @default(uuid()) @db.VarChar(36)
+  title             String   @db.VarChar(191)
+  status            String   @db.VarChar(50)
+  leadId            String?  @db.VarChar(36)
+  customerAccountId String?  @db.VarChar(36)
+  contactId         String?  @db.VarChar(36)
+  ownerUserId       String?  @db.VarChar(36)
+  estimatedValue    Decimal?
+  currency          String?  @db.VarChar(3)
+
+  lead                 Lead?                 @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customerAccount      CustomerAccount?      @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  contact              Contact?              @relation("OpportunityContact", fields: [contactId], references: [id], onDelete: SetNull)
+  owner                User?                 @relation("OpportunityOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  quotes               Quote[]
+  activityContexts     ActivityContext[]     @relation("ActivityContextOpportunity")
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationOpportunity")
+  notificationContexts NotificationContext[] @relation("NotificationContextOpportunity")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([leadId])
+  @@index([customerAccountId])
+  @@index([contactId])
+  @@index([ownerUserId])
+}
+
+model Activity {
+  id             String    @id @default(uuid()) @db.VarChar(36)
+  subject        String    @db.VarChar(191)
+  activityType   String    @db.VarChar(100)
+  status         String    @db.VarChar(50)
+  dueAt          DateTime? @db.DateTime(3)
+  assignedUserId String?   @db.VarChar(36)
+  notes          String?   @db.Text
+
+  assignedUser         User?                 @relation("ActivityAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  contexts             ActivityContext[]
+  notificationContexts NotificationContext[] @relation("NotificationContextActivity")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@index([assignedUserId])
+  @@index([dueAt])
+}
+
+model ActivityContext {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  activityId        String  @db.VarChar(36)
+  leadId            String? @db.VarChar(36)
+  opportunityId     String? @db.VarChar(36)
+  customerAccountId String? @db.VarChar(36)
+  contactId         String? @db.VarChar(36)
+  quoteId           String? @db.VarChar(36)
+  orderId           String? @db.VarChar(36)
+  ticketId          String? @db.VarChar(36)
+
+  activity        Activity         @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  lead            Lead?            @relation("ActivityContextLead", fields: [leadId], references: [id], onDelete: Restrict)
+  opportunity     Opportunity?     @relation("ActivityContextOpportunity", fields: [opportunityId], references: [id], onDelete: Restrict)
+  customerAccount CustomerAccount? @relation("ActivityContextCustomerAccount", fields: [customerAccountId], references: [id], onDelete: Restrict)
+  contact         Contact?         @relation("ActivityContextContact", fields: [contactId], references: [id], onDelete: Restrict)
+  quote           Quote?           @relation("ActivityContextQuote", fields: [quoteId], references: [id], onDelete: Restrict)
+  order           Order?           @relation("ActivityContextOrder", fields: [orderId], references: [id], onDelete: Restrict)
+  ticket          Ticket?          @relation("ActivityContextTicket", fields: [ticketId], references: [id], onDelete: Restrict)
+
+  @@unique([activityId, leadId])
+  @@unique([activityId, opportunityId])
+  @@unique([activityId, customerAccountId])
+  @@unique([activityId, contactId])
+  @@unique([activityId, quoteId])
+  @@unique([activityId, orderId])
+  @@unique([activityId, ticketId])
+  @@index([activityId])
+  @@index([leadId])
+  @@index([opportunityId])
+  @@index([customerAccountId])
+  @@index([contactId])
+  @@index([quoteId])
+  @@index([orderId])
+  @@index([ticketId])
+}
+
+model Product {
+  id                   String                @id @default(uuid()) @db.VarChar(36)
+  code                 String                @unique @db.VarChar(100)
+  name                 String                @db.VarChar(191)
+  category             String?               @db.VarChar(100)
+  status               String                @db.VarChar(50)
+  provisioningCategory ProvisioningCategory?
+
+  commercialProfileVersions ProductCommercialProfileVersion[]
+  supplierAssignments       SupplierAssignment[]
+  quoteItems                QuoteItem[]
+  orderItems                OrderItem[]
+  services                  Service[]
+  invoiceLines              InvoiceLine[]
+  ticketContexts            TicketContext[]                   @relation("TicketContextProduct")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+}
+
+model ProductCommercialProfileVersion {
+  id                        String    @id @default(uuid()) @db.VarChar(36)
+  productId                 String    @db.VarChar(36)
+  effectiveFrom             DateTime  @db.DateTime(3)
+  effectiveTo               DateTime? @db.DateTime(3)
+  taxConfigurationReference String?   @db.VarChar(191)
+
+  product      Product                   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  priceOptions ProductPriceOption[]
+  termVersions SubscriptionTermVersion[]
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([productId, effectiveFrom])
+}
+
+model ProductPriceOption {
+  id                         String   @id @default(uuid()) @db.VarChar(36)
+  commercialProfileVersionId String   @db.VarChar(36)
+  amount                     Decimal
+  setupFee                   Decimal?
+  currency                   String   @db.VarChar(3)
+  billingCycle               String?  @db.VarChar(50)
+  quantityModel              String?  @db.VarChar(100)
+
+  commercialProfileVersion ProductCommercialProfileVersion @relation(fields: [commercialProfileVersionId], references: [id], onDelete: Restrict)
+
+  @@index([commercialProfileVersionId])
+}
+
+model Vendor {
+  id   String @id @default(uuid()) @db.VarChar(36)
+  name String @db.VarChar(191)
+
+  contacts             VendorContact[]
+  offerings            SupplierOffering[]
+  purchaseOrders       PurchaseOrder[]
+  invoices             VendorInvoice[]
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationVendor")
+  notificationContexts NotificationContext[] @relation("NotificationContextVendor")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+}
+
+model VendorContact {
+  id       String  @id @default(uuid()) @db.VarChar(36)
+  vendorId String  @db.VarChar(36)
+  name     String  @db.VarChar(191)
+  email    String? @db.VarChar(191)
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+
+  @@index([vendorId])
+}
+
+model SupplierOffering {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  vendorId          String  @db.VarChar(36)
+  name              String  @db.VarChar(191)
+  externalReference String? @db.VarChar(191)
+
+  vendor             Vendor                @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  assignments        SupplierAssignment[]
+  costHistory        SupplierCostHistory[]
+  purchaseOrderItems PurchaseOrderItem[]
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@index([vendorId])
+}
+
+model SupplierAssignment {
+  id                 String    @id @default(uuid()) @db.VarChar(36)
+  productId          String    @db.VarChar(36)
+  supplierOfferingId String    @db.VarChar(36)
+  effectiveFrom      DateTime? @db.DateTime(3)
+  effectiveTo        DateTime? @db.DateTime(3)
+
+  product                Product                 @relation(fields: [productId], references: [id], onDelete: Restrict)
+  supplierOffering       SupplierOffering        @relation(fields: [supplierOfferingId], references: [id], onDelete: Restrict)
+  services               Service[]
+  provisioningOperations ProvisioningOperation[]
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([productId, effectiveFrom])
+  @@index([supplierOfferingId])
+}
+
+model SupplierCostHistory {
+  id                 String    @id @default(uuid()) @db.VarChar(36)
+  supplierOfferingId String    @db.VarChar(36)
+  cost               Decimal
+  currency           String    @db.VarChar(3)
+  effectiveFrom      DateTime  @db.DateTime(3)
+  effectiveTo        DateTime? @db.DateTime(3)
+
+  supplierOffering SupplierOffering @relation(fields: [supplierOfferingId], references: [id], onDelete: Restrict)
+
+  @@index([supplierOfferingId, effectiveFrom])
+}
+
+model Quote {
+  id                String    @id @default(uuid()) @db.VarChar(36)
+  customerAccountId String    @db.VarChar(36)
+  contactId         String?   @db.VarChar(36)
+  leadId            String?   @db.VarChar(36)
+  opportunityId     String?   @db.VarChar(36)
+  status            String    @db.VarChar(50)
+  issuedAt          DateTime? @db.DateTime(3)
+  expiresAt         DateTime? @db.DateTime(3)
+
+  customerAccount      CustomerAccount       @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  contact              Contact?              @relation("QuoteContact", fields: [contactId], references: [id], onDelete: Restrict)
+  lead                 Lead?                 @relation("QuoteLead", fields: [leadId], references: [id], onDelete: Restrict)
+  opportunity          Opportunity?          @relation(fields: [opportunityId], references: [id], onDelete: Restrict)
+  items                QuoteItem[]
+  orders               Order[]
+  activityContexts     ActivityContext[]     @relation("ActivityContextQuote")
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationQuote")
+  notificationContexts NotificationContext[] @relation("NotificationContextQuote")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([customerAccountId])
+  @@index([contactId])
+  @@index([leadId])
+  @@index([opportunityId])
+}
+
+model QuoteItem {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  quoteId         String   @db.VarChar(36)
+  productId       String   @db.VarChar(36)
+  productCode     String   @db.VarChar(100)
+  productName     String   @db.VarChar(191)
+  description     String?  @db.Text
+  quantity        Decimal
+  unitPrice       Decimal
+  currency        String   @db.VarChar(3)
+  setupAmount     Decimal?
+  recurringAmount Decimal?
+  billingCycle    String?  @db.VarChar(50)
+  discountAmount  Decimal?
+  taxBasis        String?  @db.VarChar(100)
+  taxRate         Decimal?
+  taxAmount       Decimal?
+  lineTotal       Decimal
+
+  quote      Quote       @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  orderItems OrderItem[]
+
+  @@index([quoteId])
+  @@index([productId])
+}
+
+model Order {
+  id                String    @id @default(uuid()) @db.VarChar(36)
+  customerAccountId String    @db.VarChar(36)
+  quoteId           String?   @db.VarChar(36)
+  status            String    @db.VarChar(50)
+  placedAt          DateTime? @db.DateTime(3)
+
+  customerAccount      CustomerAccount       @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  quote                Quote?                @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  items                OrderItem[]
+  activityContexts     ActivityContext[]     @relation("ActivityContextOrder")
+  ticketContexts       TicketContext[]       @relation("TicketContextOrder")
+  purchaseOrders       PurchaseOrder[]
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationOrder")
+  notificationContexts NotificationContext[] @relation("NotificationContextOrder")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([customerAccountId])
+  @@index([quoteId])
+}
+
+model OrderItem {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  orderId         String   @db.VarChar(36)
+  productId       String   @db.VarChar(36)
+  quoteItemId     String?  @db.VarChar(36)
+  productCode     String   @db.VarChar(100)
+  productName     String   @db.VarChar(191)
+  description     String?  @db.Text
+  quantity        Decimal
+  unitPrice       Decimal
+  currency        String   @db.VarChar(3)
+  setupAmount     Decimal?
+  recurringAmount Decimal?
+  billingCycle    String?  @db.VarChar(50)
+  discountAmount  Decimal?
+  taxBasis        String?  @db.VarChar(100)
+  taxRate         Decimal?
+  taxAmount       Decimal?
+  lineTotal       Decimal
+
+  order        Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  product      Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quoteItem    QuoteItem?    @relation(fields: [quoteItemId], references: [id], onDelete: Restrict)
+  services     Service[]
+  invoiceLines InvoiceLine[]
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([quoteItemId])
+}
+
+model Service {
+  id                   String  @id @default(uuid()) @db.VarChar(36)
+  customerAccountId    String  @db.VarChar(36)
+  productId            String  @db.VarChar(36)
+  orderItemId          String? @db.VarChar(36)
+  supplierAssignmentId String? @db.VarChar(36)
+  productCodeSnapshot  String  @db.VarChar(100)
+  productNameSnapshot  String  @db.VarChar(191)
+  status               String  @db.VarChar(50)
+
+  customerAccount        CustomerAccount         @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  product                Product                 @relation(fields: [productId], references: [id], onDelete: Restrict)
+  orderItem              OrderItem?              @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  supplierAssignment     SupplierAssignment?     @relation(fields: [supplierAssignmentId], references: [id], onDelete: Restrict)
+  subscriptions          Subscription[]
+  provisioningOperations ProvisioningOperation[]
+  invoiceLines           InvoiceLine[]
+  purchaseOrders         PurchaseOrder[]
+  ticketContexts         TicketContext[]         @relation("TicketContextService")
+  documentRelations      DocumentRelation[]      @relation("DocumentRelationService")
+  notificationContexts   NotificationContext[]   @relation("NotificationContextService")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@index([customerAccountId])
+  @@index([productId])
+  @@index([orderItemId])
+  @@index([supplierAssignmentId])
+}
+
+model Subscription {
+  id        String    @id @default(uuid()) @db.VarChar(36)
+  serviceId String    @db.VarChar(36)
+  status    String    @db.VarChar(50)
+  startedAt DateTime? @db.DateTime(3)
+  endedAt   DateTime? @db.DateTime(3)
+
+  service              Service                   @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  termVersions         SubscriptionTermVersion[]
+  invoiceLines         InvoiceLine[]
+  ticketContexts       TicketContext[]           @relation("TicketContextSubscription")
+  documentRelations    DocumentRelation[]        @relation("DocumentRelationSubscription")
+  notificationContexts NotificationContext[]     @relation("NotificationContextSubscription")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([serviceId])
+}
+
+model SubscriptionTermVersion {
+  id                                String    @id @default(uuid()) @db.VarChar(36)
+  subscriptionId                    String    @db.VarChar(36)
+  productCommercialProfileVersionId String?   @db.VarChar(36)
+  effectiveFrom                     DateTime  @db.DateTime(3)
+  effectiveTo                       DateTime? @db.DateTime(3)
+  quantity                          Decimal
+  recurringPrice                    Decimal
+  currency                          String    @db.VarChar(3)
+  billingCycle                      String    @db.VarChar(50)
+
+  subscription             Subscription                     @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  commercialProfileVersion ProductCommercialProfileVersion? @relation(fields: [productCommercialProfileVersionId], references: [id], onDelete: Restrict)
+
+  @@index([subscriptionId, effectiveFrom])
+  @@index([productCommercialProfileVersionId])
+}
+
+model ProvisioningOperation {
+  id                   String    @id @default(uuid()) @db.VarChar(36)
+  serviceId            String    @db.VarChar(36)
+  supplierAssignmentId String?   @db.VarChar(36)
+  operationKind        String    @db.VarChar(100)
+  outcome              String?   @db.VarChar(100)
+  externalReference    String?   @db.VarChar(191)
+  requestedAt          DateTime  @default(now()) @db.DateTime(3)
+  completedAt          DateTime? @db.DateTime(3)
+
+  service              Service               @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  supplierAssignment   SupplierAssignment?   @relation(fields: [supplierAssignmentId], references: [id], onDelete: Restrict)
+  notificationContexts NotificationContext[] @relation("NotificationContextProvisioningOperation")
+
+  @@index([serviceId, requestedAt])
+  @@index([supplierAssignmentId])
+}
+
+model Invoice {
+  id                String    @id @default(uuid()) @db.VarChar(36)
+  customerAccountId String    @db.VarChar(36)
+  billingContactId  String?   @db.VarChar(36)
+  status            String    @db.VarChar(50)
+  currency          String    @db.VarChar(3)
+  issueDate         DateTime? @db.DateTime(3)
+  dueDate           DateTime? @db.DateTime(3)
+  subtotal          Decimal?
+  taxTotal          Decimal?
+  total             Decimal?
+
+  customerAccount      CustomerAccount       @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  billingContact       Contact?              @relation("InvoiceBillingContact", fields: [billingContactId], references: [id], onDelete: Restrict)
+  lines                InvoiceLine[]
+  paymentAllocations   PaymentAllocation[]
+  creditApplications   CreditApplication[]
+  creditNotes          CreditNote[]
+  refunds              Refund[]
+  ticketContexts       TicketContext[]       @relation("TicketContextInvoice")
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationInvoice")
+  notificationContexts NotificationContext[] @relation("NotificationContextInvoice")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([customerAccountId])
+  @@index([billingContactId])
+}
+
+model InvoiceLine {
+  id             String   @id @default(uuid()) @db.VarChar(36)
+  invoiceId      String   @db.VarChar(36)
+  productId      String?  @db.VarChar(36)
+  serviceId      String?  @db.VarChar(36)
+  subscriptionId String?  @db.VarChar(36)
+  orderItemId    String?  @db.VarChar(36)
+  description    String   @db.Text
+  quantity       Decimal
+  unitPrice      Decimal
+  currency       String   @db.VarChar(3)
+  discountAmount Decimal?
+  taxBasis       String?  @db.VarChar(100)
+  taxRate        Decimal?
+  taxAmount      Decimal?
+  lineTotal      Decimal
+
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  product      Product?      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  service      Service?      @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  orderItem    OrderItem?    @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@index([serviceId])
+  @@index([subscriptionId])
+  @@index([orderItemId])
+}
+
+model Payment {
+  id                String    @id @default(uuid()) @db.VarChar(36)
+  customerAccountId String    @db.VarChar(36)
+  status            String    @db.VarChar(50)
+  amount            Decimal
+  currency          String    @db.VarChar(3)
+  paymentMethod     String?   @db.VarChar(100)
+  paymentReference  String?   @db.VarChar(191)
+  receivedAt        DateTime? @db.DateTime(3)
+
+  customerAccount      CustomerAccount       @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  allocations          PaymentAllocation[]
+  refunds              Refund[]
+  ticketContexts       TicketContext[]       @relation("TicketContextPayment")
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationPayment")
+  notificationContexts NotificationContext[] @relation("NotificationContextPayment")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([customerAccountId])
+  @@index([receivedAt])
+}
+
+model PaymentAllocation {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  paymentId   String   @db.VarChar(36)
+  invoiceId   String   @db.VarChar(36)
+  amount      Decimal
+  currency    String   @db.VarChar(3)
+  allocatedAt DateTime @default(now()) @db.DateTime(3)
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId])
+  @@index([invoiceId])
+}
+
+model Credit {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  customerAccountId String  @db.VarChar(36)
+  amount            Decimal
+  currency          String  @db.VarChar(3)
+  source            String? @db.VarChar(191)
+  reason            String? @db.Text
+
+  customerAccount      CustomerAccount       @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  applications         CreditApplication[]
+  ticketContexts       TicketContext[]       @relation("TicketContextCredit")
+  notificationContexts NotificationContext[] @relation("NotificationContextCredit")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([customerAccountId])
+}
+
+model CreditApplication {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  creditId  String   @db.VarChar(36)
+  invoiceId String   @db.VarChar(36)
+  amount    Decimal
+  currency  String   @db.VarChar(3)
+  appliedAt DateTime @default(now()) @db.DateTime(3)
+
+  credit  Credit  @relation(fields: [creditId], references: [id], onDelete: Restrict)
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@index([creditId])
+  @@index([invoiceId])
+}
+
+model CreditNote {
+  id        String    @id @default(uuid()) @db.VarChar(36)
+  invoiceId String    @db.VarChar(36)
+  amount    Decimal
+  currency  String    @db.VarChar(3)
+  reason    String?   @db.Text
+  issuedAt  DateTime? @db.DateTime(3)
+
+  invoice              Invoice               @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationCreditNote")
+  notificationContexts NotificationContext[] @relation("NotificationContextCreditNote")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([invoiceId])
+}
+
+model Refund {
+  id         String    @id @default(uuid()) @db.VarChar(36)
+  paymentId  String    @db.VarChar(36)
+  invoiceId  String?   @db.VarChar(36)
+  amount     Decimal
+  currency   String    @db.VarChar(3)
+  reason     String?   @db.Text
+  refundedAt DateTime? @db.DateTime(3)
+
+  payment              Payment               @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  invoice              Invoice?              @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  ticketContexts       TicketContext[]       @relation("TicketContextRefund")
+  notificationContexts NotificationContext[] @relation("NotificationContextRefund")
+
+  @@index([paymentId])
+  @@index([invoiceId])
+}
+
+model PurchaseRequest {
+  id          String  @id @default(uuid()) @db.VarChar(36)
+  description String? @db.Text
+
+  purchaseOrders PurchaseOrder[]
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+}
+
+model PurchaseOrder {
+  id                String    @id @default(uuid()) @db.VarChar(36)
+  vendorId          String    @db.VarChar(36)
+  purchaseRequestId String?   @db.VarChar(36)
+  customerOrderId   String?   @db.VarChar(36)
+  serviceId         String?   @db.VarChar(36)
+  status            String    @db.VarChar(50)
+  issuedAt          DateTime? @db.DateTime(3)
+
+  vendor               Vendor                @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  purchaseRequest      PurchaseRequest?      @relation(fields: [purchaseRequestId], references: [id], onDelete: Restrict)
+  customerOrder        Order?                @relation(fields: [customerOrderId], references: [id], onDelete: Restrict)
+  service              Service?              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  items                PurchaseOrderItem[]
+  vendorInvoices       VendorInvoice[]
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationPurchaseOrder")
+  notificationContexts NotificationContext[] @relation("NotificationContextPurchaseOrder")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([vendorId])
+  @@index([purchaseRequestId])
+  @@index([customerOrderId])
+  @@index([serviceId])
+}
+
+model PurchaseOrderItem {
+  id                 String   @id @default(uuid()) @db.VarChar(36)
+  purchaseOrderId    String   @db.VarChar(36)
+  supplierOfferingId String?  @db.VarChar(36)
+  description        String   @db.Text
+  quantity           Decimal
+  supplierCost       Decimal
+  currency           String   @db.VarChar(3)
+  taxAmount          Decimal?
+
+  purchaseOrder    PurchaseOrder     @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  supplierOffering SupplierOffering? @relation(fields: [supplierOfferingId], references: [id], onDelete: Restrict)
+
+  @@index([purchaseOrderId])
+  @@index([supplierOfferingId])
+}
+
+model VendorInvoice {
+  id                  String    @id @default(uuid()) @db.VarChar(36)
+  vendorId            String    @db.VarChar(36)
+  purchaseOrderId     String?   @db.VarChar(36)
+  amount              Decimal?
+  currency            String?   @db.VarChar(3)
+  vendorInvoiceNumber String?   @db.VarChar(191)
+  invoiceDate         DateTime? @db.DateTime(3)
+
+  vendor               Vendor                @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  purchaseOrder        PurchaseOrder?        @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  payments             VendorPayment[]
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationVendorInvoice")
+  notificationContexts NotificationContext[] @relation("NotificationContextVendorInvoice")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([vendorId])
+  @@index([purchaseOrderId])
+}
+
+model VendorPayment {
+  id               String    @id @default(uuid()) @db.VarChar(36)
+  vendorInvoiceId  String    @db.VarChar(36)
+  amount           Decimal
+  currency         String    @db.VarChar(3)
+  paymentReference String?   @db.VarChar(191)
+  paidAt           DateTime? @db.DateTime(3)
+
+  vendorInvoice VendorInvoice @relation(fields: [vendorInvoiceId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([vendorInvoiceId])
+}
+
+model Ticket {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  customerAccountId String  @db.VarChar(36)
+  contactId         String? @db.VarChar(36)
+  openedByUserId    String? @db.VarChar(36)
+  assignedUserId    String? @db.VarChar(36)
+  subject           String  @db.VarChar(191)
+  status            String  @db.VarChar(50)
+  priority          String  @db.VarChar(50)
+
+  customerAccount      CustomerAccount       @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  contact              Contact?              @relation("TicketContact", fields: [contactId], references: [id], onDelete: Restrict)
+  openedBy             User?                 @relation("TicketOpenedBy", fields: [openedByUserId], references: [id], onDelete: Restrict)
+  assignedUser         User?                 @relation("TicketAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  messages             TicketMessage[]
+  contexts             TicketContext[]       @relation("TicketContexts")
+  relatedContexts      TicketContext[]       @relation("TicketRelatedTicket")
+  activityContexts     ActivityContext[]     @relation("ActivityContextTicket")
+  documentRelations    DocumentRelation[]    @relation("DocumentRelationTicket")
+  notificationContexts NotificationContext[] @relation("NotificationContextTicket")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@index([customerAccountId])
+  @@index([contactId])
+  @@index([openedByUserId])
+  @@index([assignedUserId])
+}
+
+model TicketMessage {
+  id              String                  @id @default(uuid()) @db.VarChar(36)
+  ticketId        String                  @db.VarChar(36)
+  authorUserId    String?                 @db.VarChar(36)
+  authorContactId String?                 @db.VarChar(36)
+  visibility      TicketMessageVisibility
+  body            String                  @db.Text
+
+  ticket        Ticket   @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  authorUser    User?    @relation("TicketMessageAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
+  authorContact Contact? @relation("TicketMessageContactAuthor", fields: [authorContactId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([ticketId, createdAt])
+  @@index([authorUserId])
+  @@index([authorContactId])
+}
+
+model TicketContext {
+  id              String  @id @default(uuid()) @db.VarChar(36)
+  ticketId        String  @db.VarChar(36)
+  serviceId       String? @db.VarChar(36)
+  invoiceId       String? @db.VarChar(36)
+  paymentId       String? @db.VarChar(36)
+  creditId        String? @db.VarChar(36)
+  refundId        String? @db.VarChar(36)
+  subscriptionId  String? @db.VarChar(36)
+  orderId         String? @db.VarChar(36)
+  productId       String? @db.VarChar(36)
+  relatedTicketId String? @db.VarChar(36)
+
+  ticket        Ticket        @relation("TicketContexts", fields: [ticketId], references: [id], onDelete: Restrict)
+  service       Service?      @relation("TicketContextService", fields: [serviceId], references: [id], onDelete: Restrict)
+  invoice       Invoice?      @relation("TicketContextInvoice", fields: [invoiceId], references: [id], onDelete: Restrict)
+  payment       Payment?      @relation("TicketContextPayment", fields: [paymentId], references: [id], onDelete: Restrict)
+  credit        Credit?       @relation("TicketContextCredit", fields: [creditId], references: [id], onDelete: Restrict)
+  refund        Refund?       @relation("TicketContextRefund", fields: [refundId], references: [id], onDelete: Restrict)
+  subscription  Subscription? @relation("TicketContextSubscription", fields: [subscriptionId], references: [id], onDelete: Restrict)
+  order         Order?        @relation("TicketContextOrder", fields: [orderId], references: [id], onDelete: Restrict)
+  product       Product?      @relation("TicketContextProduct", fields: [productId], references: [id], onDelete: Restrict)
+  relatedTicket Ticket?       @relation("TicketRelatedTicket", fields: [relatedTicketId], references: [id], onDelete: Restrict)
+
+  @@unique([ticketId, serviceId])
+  @@unique([ticketId, invoiceId])
+  @@unique([ticketId, paymentId])
+  @@unique([ticketId, creditId])
+  @@unique([ticketId, refundId])
+  @@unique([ticketId, subscriptionId])
+  @@unique([ticketId, orderId])
+  @@unique([ticketId, productId])
+  @@unique([ticketId, relatedTicketId])
+  @@index([ticketId])
+  @@index([serviceId])
+  @@index([invoiceId])
+  @@index([paymentId])
+  @@index([creditId])
+  @@index([refundId])
+  @@index([subscriptionId])
+  @@index([orderId])
+  @@index([productId])
+  @@index([relatedTicketId])
+}
+
+model Document {
+  id                String             @id @default(uuid()) @db.VarChar(36)
+  customerAccountId String?            @db.VarChar(36)
+  uploadedByUserId  String?            @db.VarChar(36)
+  name              String             @db.VarChar(191)
+  visibility        DocumentVisibility
+  category          String?            @db.VarChar(100)
+
+  customerAccount      CustomerAccount?      @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  uploadedBy           User?                 @relation("DocumentUploader", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+  versions             DocumentVersion[]
+  relations            DocumentRelation[]
+  notificationContexts NotificationContext[] @relation("NotificationContextDocument")
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@index([customerAccountId])
+  @@index([uploadedByUserId])
+}
+
+model DocumentVersion {
+  id               String  @id @default(uuid()) @db.VarChar(36)
+  documentId       String  @db.VarChar(36)
+  uploadedByUserId String? @db.VarChar(36)
+  versionNumber    Int
+  fileName         String  @db.VarChar(191)
+  mimeType         String? @db.VarChar(191)
+  fileSize         BigInt?
+  storageReference String  @db.VarChar(191)
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  uploadedBy User?    @relation("DocumentVersionUploader", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@unique([documentId, versionNumber])
+  @@index([uploadedByUserId])
+}
+
+model DocumentRelation {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  documentId        String  @db.VarChar(36)
+  customerAccountId String? @db.VarChar(36)
+  contactId         String? @db.VarChar(36)
+  userId            String? @db.VarChar(36)
+  leadId            String? @db.VarChar(36)
+  opportunityId     String? @db.VarChar(36)
+  quoteId           String? @db.VarChar(36)
+  orderId           String? @db.VarChar(36)
+  serviceId         String? @db.VarChar(36)
+  subscriptionId    String? @db.VarChar(36)
+  invoiceId         String? @db.VarChar(36)
+  paymentId         String? @db.VarChar(36)
+  creditNoteId      String? @db.VarChar(36)
+  ticketId          String? @db.VarChar(36)
+  vendorId          String? @db.VarChar(36)
+  purchaseOrderId   String? @db.VarChar(36)
+  vendorInvoiceId   String? @db.VarChar(36)
+
+  document        Document         @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  customerAccount CustomerAccount? @relation("DocumentRelationCustomerAccount", fields: [customerAccountId], references: [id], onDelete: Restrict)
+  contact         Contact?         @relation("DocumentRelationContact", fields: [contactId], references: [id], onDelete: Restrict)
+  user            User?            @relation("DocumentRelationUser", fields: [userId], references: [id], onDelete: Restrict)
+  lead            Lead?            @relation("DocumentRelationLead", fields: [leadId], references: [id], onDelete: Restrict)
+  opportunity     Opportunity?     @relation("DocumentRelationOpportunity", fields: [opportunityId], references: [id], onDelete: Restrict)
+  quote           Quote?           @relation("DocumentRelationQuote", fields: [quoteId], references: [id], onDelete: Restrict)
+  order           Order?           @relation("DocumentRelationOrder", fields: [orderId], references: [id], onDelete: Restrict)
+  service         Service?         @relation("DocumentRelationService", fields: [serviceId], references: [id], onDelete: Restrict)
+  subscription    Subscription?    @relation("DocumentRelationSubscription", fields: [subscriptionId], references: [id], onDelete: Restrict)
+  invoice         Invoice?         @relation("DocumentRelationInvoice", fields: [invoiceId], references: [id], onDelete: Restrict)
+  payment         Payment?         @relation("DocumentRelationPayment", fields: [paymentId], references: [id], onDelete: Restrict)
+  creditNote      CreditNote?      @relation("DocumentRelationCreditNote", fields: [creditNoteId], references: [id], onDelete: Restrict)
+  ticket          Ticket?          @relation("DocumentRelationTicket", fields: [ticketId], references: [id], onDelete: Restrict)
+  vendor          Vendor?          @relation("DocumentRelationVendor", fields: [vendorId], references: [id], onDelete: Restrict)
+  purchaseOrder   PurchaseOrder?   @relation("DocumentRelationPurchaseOrder", fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  vendorInvoice   VendorInvoice?   @relation("DocumentRelationVendorInvoice", fields: [vendorInvoiceId], references: [id], onDelete: Restrict)
+
+  @@unique([documentId, customerAccountId])
+  @@unique([documentId, contactId])
+  @@unique([documentId, userId])
+  @@unique([documentId, leadId])
+  @@unique([documentId, opportunityId])
+  @@unique([documentId, quoteId])
+  @@unique([documentId, orderId])
+  @@unique([documentId, serviceId])
+  @@unique([documentId, subscriptionId])
+  @@unique([documentId, invoiceId])
+  @@unique([documentId, paymentId])
+  @@unique([documentId, creditNoteId])
+  @@unique([documentId, ticketId])
+  @@unique([documentId, vendorId])
+  @@unique([documentId, purchaseOrderId])
+  @@unique([documentId, vendorInvoiceId])
+  @@index([documentId])
+  @@index([customerAccountId])
+  @@index([contactId])
+  @@index([userId])
+  @@index([leadId])
+  @@index([opportunityId])
+  @@index([quoteId])
+  @@index([orderId])
+  @@index([serviceId])
+  @@index([subscriptionId])
+  @@index([invoiceId])
+  @@index([paymentId])
+  @@index([creditNoteId])
+  @@index([ticketId])
+  @@index([vendorId])
+  @@index([purchaseOrderId])
+  @@index([vendorInvoiceId])
+}
+
+model Notification {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  customerAccountId String? @db.VarChar(36)
+  eventType         String  @db.VarChar(100)
+  title             String? @db.VarChar(191)
+  body              String? @db.Text
+
+  customerAccount CustomerAccount?       @relation(fields: [customerAccountId], references: [id], onDelete: Restrict)
+  deliveries      NotificationDelivery[]
+  contexts        NotificationContext[]
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([customerAccountId, createdAt])
+}
+
+model NotificationDelivery {
+  id                   String    @id @default(uuid()) @db.VarChar(36)
+  notificationId       String    @db.VarChar(36)
+  recipientUserId      String    @db.VarChar(36)
+  customerMembershipId String?   @db.VarChar(36)
+  customerAccountId    String?   @db.VarChar(36)
+  channel              String    @db.VarChar(50)
+  templateId           String?   @db.VarChar(36)
+  status               String    @db.VarChar(50)
+  sentAt               DateTime? @db.DateTime(3)
+  failureInformation   String?   @db.Text
+
+  notification Notification          @relation(fields: [notificationId], references: [id], onDelete: Restrict)
+  recipient    User                  @relation(fields: [recipientUserId], references: [id], onDelete: Restrict)
+  membership   CustomerMembership?   @relation(fields: [customerMembershipId, recipientUserId, customerAccountId], references: [id, userId, customerAccountId], onDelete: Restrict)
+  template     NotificationTemplate? @relation(fields: [templateId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@unique([notificationId, recipientUserId, channel])
+  @@index([notificationId])
+  @@index([recipientUserId])
+  @@index([customerMembershipId, recipientUserId, customerAccountId])
+  @@index([templateId])
+  @@index([status])
+}
+
+model NotificationContext {
+  id                      String  @id @default(uuid()) @db.VarChar(36)
+  notificationId          String  @db.VarChar(36)
+  customerAccountId       String? @db.VarChar(36)
+  userId                  String? @db.VarChar(36)
+  leadId                  String? @db.VarChar(36)
+  opportunityId           String? @db.VarChar(36)
+  activityId              String? @db.VarChar(36)
+  quoteId                 String? @db.VarChar(36)
+  orderId                 String? @db.VarChar(36)
+  serviceId               String? @db.VarChar(36)
+  subscriptionId          String? @db.VarChar(36)
+  invoiceId               String? @db.VarChar(36)
+  paymentId               String? @db.VarChar(36)
+  creditId                String? @db.VarChar(36)
+  creditNoteId            String? @db.VarChar(36)
+  refundId                String? @db.VarChar(36)
+  ticketId                String? @db.VarChar(36)
+  provisioningOperationId String? @db.VarChar(36)
+  vendorId                String? @db.VarChar(36)
+  purchaseOrderId         String? @db.VarChar(36)
+  vendorInvoiceId         String? @db.VarChar(36)
+  documentId              String? @db.VarChar(36)
+
+  notification          Notification           @relation(fields: [notificationId], references: [id], onDelete: Restrict)
+  customerAccount       CustomerAccount?       @relation("NotificationContextCustomerAccount", fields: [customerAccountId], references: [id], onDelete: Restrict)
+  user                  User?                  @relation("NotificationContextUser", fields: [userId], references: [id], onDelete: Restrict)
+  lead                  Lead?                  @relation("NotificationContextLead", fields: [leadId], references: [id], onDelete: Restrict)
+  opportunity           Opportunity?           @relation("NotificationContextOpportunity", fields: [opportunityId], references: [id], onDelete: Restrict)
+  activity              Activity?              @relation("NotificationContextActivity", fields: [activityId], references: [id], onDelete: Restrict)
+  quote                 Quote?                 @relation("NotificationContextQuote", fields: [quoteId], references: [id], onDelete: Restrict)
+  order                 Order?                 @relation("NotificationContextOrder", fields: [orderId], references: [id], onDelete: Restrict)
+  service               Service?               @relation("NotificationContextService", fields: [serviceId], references: [id], onDelete: Restrict)
+  subscription          Subscription?          @relation("NotificationContextSubscription", fields: [subscriptionId], references: [id], onDelete: Restrict)
+  invoice               Invoice?               @relation("NotificationContextInvoice", fields: [invoiceId], references: [id], onDelete: Restrict)
+  payment               Payment?               @relation("NotificationContextPayment", fields: [paymentId], references: [id], onDelete: Restrict)
+  credit                Credit?                @relation("NotificationContextCredit", fields: [creditId], references: [id], onDelete: Restrict)
+  creditNote            CreditNote?            @relation("NotificationContextCreditNote", fields: [creditNoteId], references: [id], onDelete: Restrict)
+  refund                Refund?                @relation("NotificationContextRefund", fields: [refundId], references: [id], onDelete: Restrict)
+  ticket                Ticket?                @relation("NotificationContextTicket", fields: [ticketId], references: [id], onDelete: Restrict)
+  provisioningOperation ProvisioningOperation? @relation("NotificationContextProvisioningOperation", fields: [provisioningOperationId], references: [id], onDelete: Restrict)
+  vendor                Vendor?                @relation("NotificationContextVendor", fields: [vendorId], references: [id], onDelete: Restrict)
+  purchaseOrder         PurchaseOrder?         @relation("NotificationContextPurchaseOrder", fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  vendorInvoice         VendorInvoice?         @relation("NotificationContextVendorInvoice", fields: [vendorInvoiceId], references: [id], onDelete: Restrict)
+  document              Document?              @relation("NotificationContextDocument", fields: [documentId], references: [id], onDelete: Restrict)
+
+  @@unique([notificationId, customerAccountId])
+  @@unique([notificationId, userId])
+  @@unique([notificationId, leadId])
+  @@unique([notificationId, opportunityId])
+  @@unique([notificationId, activityId])
+  @@unique([notificationId, quoteId])
+  @@unique([notificationId, orderId])
+  @@unique([notificationId, serviceId])
+  @@unique([notificationId, subscriptionId])
+  @@unique([notificationId, invoiceId])
+  @@unique([notificationId, paymentId])
+  @@unique([notificationId, creditId])
+  @@unique([notificationId, creditNoteId])
+  @@unique([notificationId, refundId])
+  @@unique([notificationId, ticketId])
+  @@unique([notificationId, provisioningOperationId])
+  @@unique([notificationId, vendorId])
+  @@unique([notificationId, purchaseOrderId])
+  @@unique([notificationId, vendorInvoiceId])
+  @@unique([notificationId, documentId])
+  @@index([notificationId])
+  @@index([customerAccountId])
+  @@index([userId])
+  @@index([leadId])
+  @@index([opportunityId])
+  @@index([activityId])
+  @@index([quoteId])
+  @@index([orderId])
+  @@index([serviceId])
+  @@index([subscriptionId])
+  @@index([invoiceId])
+  @@index([paymentId])
+  @@index([creditId])
+  @@index([creditNoteId])
+  @@index([refundId])
+  @@index([ticketId])
+  @@index([provisioningOperationId])
+  @@index([vendorId])
+  @@index([purchaseOrderId])
+  @@index([vendorInvoiceId])
+  @@index([documentId])
+}
+
+model NotificationPreference {
+  id                   String  @id @default(uuid()) @db.VarChar(36)
+  userId               String  @db.VarChar(36)
+  customerMembershipId String? @db.VarChar(36)
+  category             String  @db.VarChar(100)
+  channel              String  @db.VarChar(50)
+  enabled              Boolean
+
+  user       User                @relation("UserNotificationPreferences", fields: [userId], references: [id], onDelete: Restrict)
+  membership CustomerMembership? @relation("MembershipNotificationPreferences", fields: [customerMembershipId, userId], references: [id, userId], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([customerMembershipId])
+  @@index([customerMembershipId, userId])
+}
+
+model NotificationTemplate {
+  id        String  @id @default(uuid()) @db.VarChar(36)
+  eventType String  @db.VarChar(100)
+  channel   String  @db.VarChar(50)
+  subject   String? @db.VarChar(191)
+  body      String  @db.Text
+
+  deliveries NotificationDelivery[]
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@index([eventType, channel])
+}
+
+model AuditEvent {
+  id          String         @id @default(uuid()) @db.VarChar(36)
+  actorType   AuditActorType
+  actorUserId String?        @db.VarChar(36)
+  targetKind  String         @db.VarChar(100)
+  targetId    String         @db.VarChar(36)
+  action      String         @db.VarChar(100)
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([targetKind, targetId])
+  @@index([actorUserId, createdAt])
+  @@index([createdAt])
+}

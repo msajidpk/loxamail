@@ -7,4 +7,5 @@ node_modules/
 /test-results/
 .env*
 !.env.example
+/generated/prisma/
 *.tsbuildinfo
