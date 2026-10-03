@@ -93,7 +93,10 @@ model Contact {
 }
 
 model User {
-  id String @id @default(uuid()) @db.VarChar(36)
+  id           String  @id @default(uuid()) @db.VarChar(36)
+  email        String  @unique @db.VarChar(191)
+  passwordHash String  @db.VarChar(255)
+  status       String  @db.VarChar(50)
 
   contacts                 Contact[]                @relation("ContactUser")
   memberships              CustomerMembership[]
